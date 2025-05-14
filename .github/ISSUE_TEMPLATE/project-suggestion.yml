@@ -1,7 +1,6 @@
 name: Open-Source Project Suggestion
 description: Suggest an open-source project for the SAP AI Guild to contribute to
-title: "[Suggestion]: "
-labels: ["status:idea", "status:review", "status:active", "status:completed", "time:low", "time:medium", "time:high", "skill:Python", "skill:JavaScript", "skill:TypeScript", "skill:Machine Learning", "skill:NLP", "skill:Computer Vision", "skill:Data Science", "skill:DevOps", "not-duplicate:true", "license:open-source"]
+labels: ["os:idea"]
 assignees:
   - octocat
 
