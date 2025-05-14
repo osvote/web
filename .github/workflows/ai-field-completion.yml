@@ -18,7 +18,7 @@ jobs:
           python-version: '3.x'
 
       - name: Install Dependencies
-        run: pip install openai requests pyyaml
+        run: pip install requests pyyaml
 
       - name: Fetch Issue Content
         id: fetch-issue
@@ -30,13 +30,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Generate Missing Fields with AI
+      - name: Generate Missing Fields with Azure AI
         id: generate-fields
         run: |
           python -c "
 import os
-import openai
 import json
+import requests
 
 # Load the issue content
 with open('issue.json', 'r') as f:
@@ -48,21 +48,42 @@ for field in issue['body'].splitlines():
     if 'Repository URL:' in field:
         repository_url = field.split(':')[-1].strip()
 
-# Use OpenAI to generate missing fields
-openai.api_key = os.getenv('OPENAI_API_KEY')
-response = openai.ChatCompletion.create(
-  model='gpt-4',
-  messages=[
-    {'role': 'system', 'content': 'You are a helpful assistant for evaluating open-source projects.'},
-    {'role': 'user', 'content': f'Generate a project name, description, potential contribution areas, required skills, and estimated time commitment for this repository: {repository_url}'}
-  ]
+# Azure OpenAI Service API endpoint and key
+api_base = os.getenv('AZURE_OPENAI_ENDPOINT')
+api_key = os.getenv('AZURE_OPENAI_API_KEY')
+deployment_name = os.getenv('AZURE_OPENAI_DEPLOYMENT_NAME')
+
+# Prompt for Azure AI
+prompt = f'Generate a project name, description, potential contribution areas, required skills, and estimated time commitment for this repository: {repository_url}'
+
+# Azure OpenAI API request
+headers = {
+    'Content-Type': 'application/json',
+    'api-key': api_key
+}
+data = {
+    'prompt': prompt,
+    'max_tokens': 500,
+    'temperature': 0.7
+}
+response = requests.post(
+    f'{api_base}/openai/deployments/{deployment_name}/completions?api-version=2023-03-15-preview',
+    headers=headers,
+    json=data
 )
 
-# Print the AI-generated content
-print(response['choices'][0]['message']['content'])
+# Parse the response and print the AI-generated content
+result = response.json()
+if 'choices' in result:
+    generated_content = result['choices'][0]['text']
+    print(generated_content)
+else:
+    print('Error:', result)
 "
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
+          AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+          AZURE_OPENAI_DEPLOYMENT_NAME: ${{ secrets.AZURE_OPENAI_DEPLOYMENT_NAME }}
 
       - name: Comment on Issue with AI-Generated Fields
         run: |
