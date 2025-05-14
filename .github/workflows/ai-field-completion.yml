@@ -1,0 +1,74 @@
+name: AI Field Completion
+
+on:
+  issues:
+    types: [opened, edited]
+
+jobs:
+  complete-fields:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install Dependencies
+        run: pip install openai requests pyyaml
+
+      - name: Fetch Issue Content
+        id: fetch-issue
+        run: |
+          echo "Fetching issue content..."
+          curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }} \
+            > issue.json
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate Missing Fields with AI
+        id: generate-fields
+        run: |
+          python -c "
+import os
+import openai
+import json
+
+# Load the issue content
+with open('issue.json', 'r') as f:
+    issue = json.load(f)
+
+# Extract the repository URL from the issue
+repository_url = ''
+for field in issue['body'].splitlines():
+    if 'Repository URL:' in field:
+        repository_url = field.split(':')[-1].strip()
+
+# Use OpenAI to generate missing fields
+openai.api_key = os.getenv('OPENAI_API_KEY')
+response = openai.ChatCompletion.create(
+  model='gpt-4',
+  messages=[
+    {'role': 'system', 'content': 'You are a helpful assistant for evaluating open-source projects.'},
+    {'role': 'user', 'content': f'Generate a project name, description, potential contribution areas, required skills, and estimated time commitment for this repository: {repository_url}'}
+  ]
+)
+
+# Print the AI-generated content
+print(response['choices'][0]['message']['content'])
+"
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+      - name: Comment on Issue with AI-Generated Fields
+        run: |
+          curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -X POST \
+            -d '{"body": "Here are the AI-generated fields based on the repository URL provided:\n\n```markdown\n${{ steps.generate-fields.outputs.content }}\n```"}' \
+            https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
