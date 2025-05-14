@@ -1,6 +1,7 @@
 name: Open-Source Project Suggestion
 description: Suggest an open-source project for the SAP AI Guild to contribute to
-labels: ["os:idea"]
+title: "[Suggestion]: "
+labels: ["status:idea"]
 assignees:
   - octocat
 
@@ -12,7 +13,7 @@ body:
         
         Thank you for suggesting an open-source project for the SAP AI Guild to contribute to!
         
-        Please fill out the information below to help us evaluate the project.
+        Please fill out the information below to help us evaluate the project. If some fields are left blank, we will use AI to generate the missing details.
   
   - type: input
     id: project-name
@@ -21,7 +22,7 @@ body:
       description: The name of the open-source project
       placeholder: e.g., Hugging Face Transformers
     validations:
-      required: true
+      required: false
   
   - type: input
     id: repository-url
@@ -39,9 +40,8 @@ body:
       description: A brief description of what the project does
       placeholder: Describe the project's purpose, features, and technology stack.
     validations:
-      required: true
+      required: false
 
-  
   - type: textarea
     id: contribution-areas
     attributes:
@@ -55,7 +55,7 @@ body:
         - Performance optimizations
         - Testing
     validations:
-      required: true
+      required: false
   
   - type: dropdown
     id: time-commitment
@@ -67,7 +67,7 @@ body:
         - Medium (4-8 hours/week)
         - High (8+ hours/week)
     validations:
-      required: true
+      required: false
   
   - type: input
     id: skills
@@ -76,20 +76,7 @@ body:
       description: Skills needed to contribute to this project
       placeholder: e.g., Python, Machine Learning, NLP, JavaScript
     validations:
-      required: true
-  
-  - type: checkboxes
-    id: prerequisites
-    attributes:
-      label: Prerequisites
-      description: Please confirm the following
-      options:
-        - label: I have checked that this project is not already suggested
-          required: true
-        - label: This project has an open-source license
-          required: true
-        - label: This project is actively maintained
-          required: true
+      required: false
   
   - type: markdown
     attributes:
