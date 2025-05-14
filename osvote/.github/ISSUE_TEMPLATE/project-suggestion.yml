@@ -1,0 +1,108 @@
+name: Open-Source Project Suggestion
+description: Suggest an open-source project for the SAP AI Guild to contribute to
+title: "[Suggestion]: "
+labels: ["status:idea", "status:review", "status:active", "status:completed", "time:low", "time:medium", "time:high", "skill:Python", "skill:JavaScript", "skill:TypeScript", "skill:Machine Learning", "skill:NLP", "skill:Computer Vision", "skill:Data Science", "skill:DevOps", "not-duplicate:true", "license:open-source", "active:true"]
+assignees:
+  - octocat
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        # Open-Source Project Suggestion
+        
+        Thank you for suggesting an open-source project for the SAP AI Guild to contribute to!
+        
+        Please fill out the information below to help us evaluate the project.
+  
+  - type: input
+    id: project-name
+    attributes:
+      label: Project Name
+      description: The name of the open-source project
+      placeholder: e.g., Hugging Face Transformers
+    validations:
+      required: true
+  
+  - type: input
+    id: repository-url
+    attributes:
+      label: Repository URL
+      description: The URL of the project's GitHub repository
+      placeholder: e.g., https://github.com/huggingface/transformers
+    validations:
+      required: true
+  
+  - type: textarea
+    id: project-description
+    attributes:
+      label: Project Description
+      description: A brief description of what the project does
+      placeholder: Describe the project's purpose, features, and technology stack.
+    validations:
+      required: true
+  
+  - type: textarea
+    id: contribution-areas
+    attributes:
+      label: Potential Contribution Areas
+      description: Specific areas where the Guild could contribute
+      placeholder: |
+        List potential areas for contribution, such as:
+        - Documentation improvements
+        - Feature development
+        - Bug fixes
+        - Performance optimizations
+        - Testing
+    validations:
+      required: true
+  
+  - type: dropdown
+    id: time-commitment
+    attributes:
+      label: Estimated Time Commitment
+      description: How much time would contributing to this project require?
+      options:
+        - Low (1-3 hours/week)
+        - Medium (4-8 hours/week)
+        - High (8+ hours/week)
+    validations:
+      required: true
+  
+  - type: input
+    id: skills
+    attributes:
+      label: Required Skills
+      description: Skills needed to contribute to this project
+      placeholder: e.g., Python, Machine Learning, NLP, JavaScript
+    validations:
+      required: true
+  
+  - type: checkboxes
+    id: prerequisites
+    attributes:
+      label: Prerequisites
+      description: Please confirm the following
+      options:
+        - label: I have checked that this project is not already suggested
+          required: true
+        - label: This project has an open-source license
+          required: true
+        - label: This project is actively maintained
+          required: true
+  
+  - type: markdown
+    attributes:
+      value: |
+        ## Additional Information
+        
+        Feel free to add any additional information that might help evaluate this project.
+  
+  - type: textarea
+    id: additional-info
+    attributes:
+      label: Additional Information
+      description: Any other relevant information about the project
+      placeholder: Include any other details that might be helpful.
+    validations:
+      required: false
