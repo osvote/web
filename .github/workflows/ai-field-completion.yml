@@ -18,84 +18,74 @@ jobs:
           node-version: '16.x'
 
       - name: Install Dependencies
-        run: npm install axios @azure/openai dotenv
+        run: npm install axios @ai-sdk/azure ai dotenv
 
       - name: Fetch Issue Content
         id: fetch-issue
         run: |
-          echo "Fetching issue content..."
           curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }} \
             > issue.json
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Generate Missing Fields with Azure AI
+      - name: Generate Missing Fields with AI SDK
         id: generate-fields
         run: |
           node <<EOF
           const fs = require('fs');
           const axios = require('axios');
-          const { OpenAIClient, AzureKeyCredential } = require('@azure/openai');
+          const { azure } = require('@ai-sdk/azure');
+          const { generateText } = require('ai');
 
           // Load the issue content
           const issue = JSON.parse(fs.readFileSync('issue.json', 'utf-8'));
 
-          // Extract the repository URL from the issue
-          let repositoryUrl = '';
-          issue.body.split('\\n').forEach(line => {
-              if (line.includes('Repository URL:')) {
-                  repositoryUrl = line.split(':')[1].trim();
-              }
+          // Extract the repository URL from the issue body
+          let repoUrl = '';
+          issue.body.split('\n').forEach(line => {
+            if (line.startsWith('Repository URL:')) {
+              repoUrl = line.split(':')[1].trim();
+            }
           });
 
-          if (!repositoryUrl) {
-              console.error('Repository URL not found in issue.');
+          if (!repoUrl) {
+            console.error('❌ Repository URL not found in issue.');
+            process.exit(1);
+          }
+
+          // Build the prompt
+          const prompt = \`Generate a project name, description, potential contribution areas, required skills, and estimated time commitment for this repository: \${repoUrl}\`;
+
+          (async () => {
+            try {
+              // Call the AI SDK
+              const { text } = await generateText({
+                model: azure(process.env.AZURE_OPENAI_DEPLOYMENT_NAME),
+                prompt,
+                max_tokens: 500,
+                temperature: 0.7,
+              });
+
+              fs.writeFileSync('generated-content.txt', text);
+              console.log(text);
+            } catch (err) {
+              console.error('❌ Error generating fields:', err);
               process.exit(1);
-          }
-
-          // Azure OpenAI Service API setup
-          const endpoint = process.env.AZURE_OPENAI_ENDPOINT;
-          const apiKey = process.env.AZURE_OPENAI_API_KEY;
-          const deploymentName = process.env.AZURE_OPENAI_DEPLOYMENT_NAME;
-
-          const client = new OpenAIClient(endpoint, new AzureKeyCredential(apiKey));
-
-          // Prompt for AI
-          const prompt = `Generate a project name, description, potential contribution areas, required skills, and estimated time commitment for this repository: ${repositoryUrl}`;
-
-          async function generateFields() {
-              try {
-                  const result = await client.getCompletions(deploymentName, {
-                      prompt: prompt,
-                      maxTokens: 500,
-                      temperature: 0.7,
-                  });
-
-                  const generatedContent = result.choices[0].text;
-                  console.log(generatedContent);
-
-                  // Save output to a file
-                  fs.writeFileSync('generated-content.txt', generatedContent);
-              } catch (error) {
-                  console.error('Error generating fields:', error);
-                  process.exit(1);
-              }
-          }
-
-          generateFields();
+            }
+          })();
           EOF
         env:
-          AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
-          AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+          AZURE_RESOURCE_NAME: ${{ secrets.AZURE_RESOURCE_NAME }}
+          AZURE_API_KEY: ${{ secrets.AZURE_API_KEY }}
           AZURE_OPENAI_DEPLOYMENT_NAME: ${{ secrets.AZURE_OPENAI_DEPLOYMENT_NAME }}
 
       - name: Comment on Issue with AI-Generated Fields
         run: |
-          GENERATED_CONTENT=$(cat generated-content.txt)
+          GENERATED=$(cat generated-content.txt)
           curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             -X POST \
-            -d "{\"body\": \"Here are the AI-generated fields based on the repository URL provided:\\n\\n\`\`\`markdown\\n${GENERATED_CONTENT}\\n\`\`\`\"}" \
+            -d "{\"body\": \"Here are the AI-generated fields based on the repository URL provided:\n\n\`\`\`markdown\n${GENERATED}\n\`\`\`\"}" \
             https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
