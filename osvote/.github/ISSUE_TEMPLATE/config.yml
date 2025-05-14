@@ -1,8 +1,0 @@
-blank_issues_enabled: false
-contact_links:
-  - name: SAP AI Guild Discussions
-    url: https://github.com/osvote/discussions
-    about: Please ask and answer questions here.
-  - name: SAP AI Guild Documentation
-    url: https://github.com/osvote/docs
-    about: Check our documentation for guides on contributing.
